@@ -1,10 +1,14 @@
 import "CoreLibs/graphics"
 
-playdate.display.setScale(2)
-playdate.display.setRefreshRate(50)
+local Display <const> = playdate.display
+local Graphics <const> = playdate.graphics
+local CenterAlignment <const> = kTextAlignment.center
 
-local x, y = playdate.display:getWidth()/2, playdate.display:getHeight()/2
+Display.setScale(2)
+Display.setRefreshRate(50)
+
+local x, y = Display:getWidth()/2, Display:getHeight()/2
 function playdate.update()
-	playdate.graphics.clear()
-	playdate.graphics.drawTextAligned(currentFrequency().."Hz", x, y, kTextAlignment.center)
+	Graphics.clear()
+	Graphics.drawTextAligned(currentFrequency().."Hz", x, y, CenterAlignment)
 end

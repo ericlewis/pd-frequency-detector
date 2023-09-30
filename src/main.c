@@ -1,16 +1,16 @@
 #include "pd_api.h"
 
-PlaydateAPI* pd;
+static PlaydateAPI* pd;
 
 #define THRESHOLD 100
 #define HYSTERESIS 10
 #define MIC_BUFLEN 4096
-int16_t micdata[MIC_BUFLEN];
-int micdatapos = 0;
-int running = 0;
-double frequency = 0;
 
-int micCallback(void* context, int16_t* data, int len) {
+static int16_t micdata[MIC_BUFLEN];
+static int micdatapos = 0;
+static double frequency = 0;
+
+static int micCallback(void* context, int16_t* data, int len) {
 	const int remaining = MIC_BUFLEN - micdatapos;
 	len = (len > remaining) ? remaining : len;
 	memcpy(&micdata[micdatapos], data, len * sizeof(int16_t));
@@ -48,7 +48,8 @@ static int currentFrequency(lua_State *L) {
 
 int eventHandler(PlaydateAPI* playdate, PDSystemEvent event, uint32_t arg) {
 	(void)arg;
-	if ( event == kEventInit ) {
+
+	if (event == kEventInit) {
 		pd = playdate;
 		pd->sound->setMicCallback(micCallback, NULL, 0);
 	} else if (event == kEventInitLua) {
@@ -57,5 +58,6 @@ int eventHandler(PlaydateAPI* playdate, PDSystemEvent event, uint32_t arg) {
 			playdate->system->logToConsole("Failed to register Lua function: %s", err);
 		}
 	}
+
 	return 0;
 }

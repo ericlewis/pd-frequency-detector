@@ -11,30 +11,33 @@ int running = 0;
 double frequency = 0;
 
 int micCallback(void* context, int16_t* data, int len) {
-	int remaining = MIC_BUFLEN - micdatapos;
-	if (len > remaining) len = remaining;
+	const int remaining = MIC_BUFLEN - micdatapos;
+	len = (len > remaining) ? remaining : len;
 	memcpy(&micdata[micdatapos], data, len * sizeof(int16_t));
 	micdatapos += len;
-	if (micdatapos >= MIC_BUFLEN) {
-		int zeroCrossings = 0;
-		int prev_sign = (micdata[0] > 0) ? 1 : -1;
-		for (int i = 1; i < MIC_BUFLEN; ++i) {
-			int cur_sign = (micdata[i] > 0) ? 1 : -1;
-			if (abs(micdata[i] - micdata[i - 1]) > THRESHOLD) {
-				if (cur_sign != prev_sign) {
-					zeroCrossings++;
-					if (cur_sign > 0) {
-						prev_sign = (micdata[i] > HYSTERESIS) ? 1 : -1;
-					} else {
-						prev_sign = (micdata[i] < -HYSTERESIS) ? -1 : 1;
-					}
-				}
-			}
+
+	if (micdatapos < MIC_BUFLEN) return 1;
+
+	int zeroCrossings = 0;
+	int prev_sign = micdata[0] > 0 ? 1 : -1;
+
+	for (int i = 1; i < MIC_BUFLEN; ++i) {
+		const int cur_sign = micdata[i] > 0 ? 1 : -1;
+		const int delta = micdata[i] - micdata[i - 1];
+
+		if (abs(delta) <= THRESHOLD) continue;
+
+		if (cur_sign != prev_sign) {
+			zeroCrossings++;
+			prev_sign = (cur_sign > 0 && micdata[i] > HYSTERESIS) ? 1 :
+						(cur_sign < 0 && micdata[i] < -HYSTERESIS) ? -1 : -prev_sign;
 		}
-		double sample_rate = 44100;
-		frequency = (zeroCrossings / 2.0) * (sample_rate / MIC_BUFLEN);
-		micdatapos = 0;
 	}
+
+	const double sample_rate = 44100.0;
+	frequency = (zeroCrossings / 2.0) * (sample_rate / MIC_BUFLEN);
+	micdatapos = 0;
+
 	return 1;
 }
 

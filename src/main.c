@@ -5,10 +5,11 @@ static PlaydateAPI* pd;
 #define THRESHOLD 100
 #define HYSTERESIS 10
 #define MIC_BUFLEN 4096
+#define SAMPLE_RATE 44100.0f
 
 static int16_t micdata[MIC_BUFLEN];
 static int micdatapos = 0;
-static double frequency = 0;
+static float frequency = 0;
 
 static int micCallback(void* context, int16_t* data, int len) {
 	const int remaining = MIC_BUFLEN - micdatapos;
@@ -34,8 +35,7 @@ static int micCallback(void* context, int16_t* data, int len) {
 		}
 	}
 
-	const double sample_rate = 44100.0;
-	frequency = (zeroCrossings / 2.0) * (sample_rate / MIC_BUFLEN);
+	frequency = (zeroCrossings / 2.0f) * (SAMPLE_RATE / MIC_BUFLEN);
 	micdatapos = 0;
 
 	return 1;
